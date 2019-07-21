@@ -1,21 +1,72 @@
+linuxcnc (1:2.9.0nyx6~pre0) stretch; urgency=low
+
+  * v2.2.0 (update)
+
+ -- Dmitry Yurtaev <dmitry@yurtaev.com>  Fri, 20 Jul 2019 00:00:00 +0300
+
 linuxcnc (1:2.9.0~pre0) stretch; urgency=medium
 
   * Master branch open for new features.
 
  -- Sebastian Kuzminsky <seb@highlab.com>  Sun, 02 Jun 2019 16:52:46 -0600
 
-linuxcnc (1:2.8.0~pre1) wheezy; urgency=low
-
-  * Upcoming release, any year now!  Watch this space!
-
- -- Sebastian Kuzminsky <seb@highlab.com>  Sun, 26 Oct 2014 23:17:34 -0600
- 
 linuxcnc (1:2.8.0~pre1) rosa; urgency=low
   * New external axis offsets
   * New support for Mesa 7i96 ethernet card
   * New experimental QT based VCP
   * New G52 local coordinate system offset
   * New support for multiple spindles up to 9
+
+ -- jethornton <jethornton@digital.void>  Sun, 02 Jun 2019 00:00:00 -0600
+
+linuxcnc (1:2.8.0nyx6~pre1) stretch; urgency=low
+
+  * v2.2.0
+
+ -- Dmitry Yurtaev <dmitry@yurtaev.com>  Wed, 24 Apr 2019 17:17:37 +0300
+
+linuxcnc (1:2.8.0nyx5~pre1) stretch; urgency=low
+
+  * tangent.comp, plotlimits.comp
+  * nyx.comp not to overwrite fbres/abs/cyc after initial reception
+  * new commands in linuxcncrsh, relative position tool offset fix
+  * nyxq DPLL control
+  * encoder index request preempt_rt fix
+
+ -- Dmitry Yurtaev <dmitry@yurtaev.com>  Tue, 23 Apr 2019 17:39:44 +0300
+
+linuxcnc (1:2.8.0nyx4~pre1) stretch; urgency=low
+
+  * timing debug pins, DPLL control
+  * tangent.comp
+
+ -- Dmitry Yurtaev <dmitry@yurtaev.com>  Thu, 28 Mar 2019 01:41:00 +0300
+
+linuxcnc (1:2.8.0nyx3~pre1) stretch; urgency=low
+
+  * fix sample configs for joints/axes
+  * rename nyx module param "axis/axes" to "maxdrives", make it working
+  * add nyx module param "mon" - duplicate YI/YO pins for monitoring
+  * add 5th axis jog keys to axis: ;/'
+  * work around E-Stop race condition in gmoccapy
+  * set NYX_AXES to 10 (for 2 stepgens)
+  * separate RTAI/uspace into nyx/y-rtai.c and y-uspace.c
+  * add passthru comp
+
+ -- Dmitry Yurtaev <dmitry@yurtaev.com>  Sun, 10 Mar 2019 16:12:24 +0300
+
+linuxcnc (1:2.8.0nyx2~pre1) stretch; urgency=low
+
+  * add nyxflash
+
+ -- Dmitry Yurtaev <dmitry@yurtaev.com>  Sat, 02 Mar 2019 15:45:12 +0300
+
+linuxcnc (1:2.8.0nyx1~pre1) stretch; urgency=low
+
+  * save motor_offset to position file
+  * added nyx module
+
+ -- Dmitry Yurtaev <dmitry@yurtaev.com>  Tue, 06 Nov 2018 01:24:28 +0300
 
 linuxcnc (1:2.7.14) unstable; urgency=medium
 

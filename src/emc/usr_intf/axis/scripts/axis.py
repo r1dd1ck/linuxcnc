@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/python
 #    This is a component of AXIS, a front-end for LinuxCNC
 #    Copyright 2004, 2005, 2006, 2007, 2008, 2009
 #    Jeff Epler <jepler@unpythonic.net> and Chris Radek <chris@timeguy.com>
@@ -121,7 +121,7 @@ os.system("xhost -SI:localuser:gdm -SI:localuser:root > /dev/null 2>&1")
 root_window = Tkinter.Tk(className="Axis")
 dpi_value = root_window.winfo_fpixels('1i')
 root_window.tk.call('tk', 'scaling', '-displayof', '.', dpi_value / 72.0)
-root_window.iconify()
+# root_window.iconify() # restore doesn't work for GNOME 3
 nf.start(root_window)
 nf.makecommand(root_window, "_", _)
 rs274.options.install(root_window)
@@ -194,6 +194,7 @@ help1 = [
     (_("Shift-Home"), _("Zero G54 offset for active axis")),
     (_("End"), _("Set G54 offset for active axis")),
     (_("Ctrl-End"), _("Set tool offset for loaded tool")),
+    (_("Shift-End"), _("Move G54 offset to the center")),
     ("-, =", _("Jog active axis or joint")),
     (";, '", _("Select Max velocity")),
 
@@ -2717,6 +2718,28 @@ class TclCommands(nf.TclCommands):
         set_motion_teleop(1)
         o.redraw_dro()
 
+    def touch_off_center(event=None, new_axis_value = None):
+        global system
+        if not manual_ok(): return
+        if joints_mode(): return
+
+	system = vars.touch_off_system.get().split()[0]
+        a = vars.ja_rbutton.get()
+        offset_command = "G10 L20 %s %c[#<_%c> / 2]" % (system, a, a)
+
+        doit = prompt_areyousure(_("Confirm center"), _("Center %c axis in system %s?\n%s") % (a, system, offset_command))
+
+        if doit:
+	    ensure_mode(linuxcnc.MODE_MDI)
+            s.poll()
+            c.mdi(offset_command)
+            c.wait_complete()
+            ensure_mode(linuxcnc.MODE_MANUAL)
+            s.poll()
+
+        o.tkRedraw()
+        reload_file(False)
+
     def touch_off_tool(event=None, new_axis_value = None):
         global system
         if not manual_ok(): return
@@ -3092,6 +3115,7 @@ root_window.bind("<KP_Home>", kp_wrap(commands.home_joint, "KeyPress"))
 root_window.bind("<Control-Home>", commands.home_all_joints)
 root_window.bind("<Shift-Home>", commands.set_axis_offset)
 root_window.bind("<End>", commands.touch_off_system)
+root_window.bind("<Shift-End>", commands.touch_off_center)
 root_window.bind("<Control-End>", commands.touch_off_tool)
 root_window.bind("<Control-KP_Home>", kp_wrap(commands.home_all_joints, "KeyPress"))
 root_window.bind("<Shift-KP_Home>", kp_wrap(commands.set_axis_offset, "KeyPress"))
@@ -3165,7 +3189,7 @@ def get_jog_mode():
 jog_after = [None]  * linuxcnc.MAX_JOINTS
 jog_cont  = [False] * linuxcnc.MAX_JOINTS
 jogging   = [0]     * linuxcnc.MAX_JOINTS
-def jog_on(a, b):
+def jog_on(a, b, c = 0):
     if not manual_ok(): return
     if not manual_tab_visible(): return
     if a < 3 or a > 5:
@@ -3177,10 +3201,10 @@ def jog_on(a, b):
         return
     jogincr = widgets.jogincr.get()
     jjogmode = get_jog_mode()
-    if jogincr != _("Continuous"):
+    if jogincr != _("Continuous") or c > 0:
         s.poll()
         if s.state != 1: return
-        distance = parse_increment(jogincr)
+        distance = c if c > 0 else parse_increment(jogincr)
         jog(linuxcnc.JOG_INCREMENT, jjogmode, a, b, distance)
         jog_cont[a] = False
     else:
@@ -3243,6 +3267,8 @@ def bind_axis(a, b, d):
     root_window.bind("<KeyPress-%s>" % b, kp_wrap(lambda e: jog_on_map(d, get_jog_speed_map(d)), "KeyPress"))
     root_window.bind("<Shift-KeyPress-%s>" % a, lambda e: jog_on_map(d, -get_max_jog_speed_map(d)))
     root_window.bind("<Shift-KeyPress-%s>" % b, lambda e: jog_on_map(d, get_max_jog_speed_map(d)))
+    root_window.bind("<Control-KeyPress-%s>" % a, lambda e: jog_on(d, -get_max_jog_speed(d), 0.01))
+    root_window.bind("<Control-KeyPress-%s>" % b, lambda e: jog_on(d, get_max_jog_speed(d), 0.01))
     root_window.bind("<KeyRelease-%s>" % a, lambda e: jog_off_map(d))
     root_window.bind("<KeyRelease-%s>" % b, lambda e: jog_off_map(d))
 
@@ -3310,20 +3336,24 @@ has_linear_joint_or_axis = (    ("LINEAR" in joint_type)
 
 # Search rules for slider items
 max_linear_speed = (
-    inifile.find("DISPLAY","MAX_LINEAR_VELOCITY")
+    inifile.find("DISPLAY","MAX_JOG_VELOCITY")
+    or inifile.find("DISPLAY","MAX_LINEAR_VELOCITY")
     or inifile.find("TRAJ","MAX_LINEAR_VELOCITY")
     or None)
 default_jog_linear_speed = (
-    inifile.find("DISPLAY", "DEFAULT_LINEAR_VELOCITY")
+    inifile.find("DISPLAY", "DEFAULT_JOG_VELOCITY")
+    or inifile.find("DISPLAY", "DEFAULT_LINEAR_VELOCITY")
     or inifile.find("TRAJ", "DEFAULT_LINEAR_VELOCITY")
     or None)
 
 max_angular_speed = (
-    inifile.find("DISPLAY","MAX_ANGULAR_VELOCITY")
+    inifile.find("DISPLAY","MAX_AJOG_VELOCITY")
+    or inifile.find("DISPLAY","MAX_ANGULAR_VELOCITY")
     or inifile.find("TRAJ","MAX_ANGULAR_VELOCITY")
     or None)
 default_jog_angular_speed = (
-    inifile.find("DISPLAY", "DEFAULT_ANGULAR_VELOCITY")
+    inifile.find("DISPLAY", "DEFAULT_AJOG_VELOCITY")
+    or inifile.find("DISPLAY", "DEFAULT_ANGULAR_VELOCITY")
     or inifile.find("TRAJ", "DEFAULT_ANGULAR_VELOCITY")
     or None)
 
@@ -3669,6 +3699,7 @@ bind_axis("KP_4", "KP_6", 0)
 bind_axis("KP_2", "KP_8", 1)
 bind_axis("KP_3", "KP_9", 2)
 bind_axis("bracketleft", "bracketright", 3)
+bind_axis("semicolon", "quoteright", 4)
 
 if len(jog_order) < 3:
     root_window.bind("<KeyPress-KP_Next>", kp_wrap(lambda e: None, "KeyPress"))
@@ -4038,6 +4069,8 @@ widgets.rapidoverride.set(100)
 commands.set_rapidrate(100)
 widgets.spinoverride.set(100)
 commands.set_spindlerate(100)
+
+commands.set_maxvel(vars.maxvel_speed.get())
 
 def forget(widget, *pins):
     if os.environ.has_key("AXIS_NO_AUTOCONFIGURE"): return
