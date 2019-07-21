@@ -160,6 +160,8 @@ case $DISTRIB_NAME in
     Debian-10|Debian-10.*)
         DOC_DEPENDS="$DOC_DEPENDS, asciidoc-dblatex"
         PYTHON_GST=python-gst-1.0,gstreamer1.0-plugins-base
+        PYTHON_IMAGING="python${PYTHON_VERSION}-pil | python-pil"
+        PYTHON_IMAGING_TK="python${PYTHON_VERSION}-pil.imagetk | python-pil.imagetk"
         EXTRA_BUILD=python-yapps
         YAPPS_RUNTIME="python-yapps"
         ;;
